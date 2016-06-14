@@ -1,0 +1,74 @@
+<?php
+
+function multistep_form_node_form_alter(&$form, &$form_state, $form_id) {
+
+  if ($form_id == 'page_node_form') {
+
+    if (empty($form_state['storage'])) {
+      $form['body'] = FALSE;
+      // No step has been set so start with the first.
+      $form_state['storage'] = array(
+        'step' => 'multiform_first_form',
+      );
+      unset($form['actions']);
+    }
+
+    // Return the current form
+    $function = $form_state['storage']['step'];
+    //$form = multiform_first_form_submit($form, $form_state);
+    $form = $function($form, $form_state);
+    
+    dsm($form);
+  }
+}
+
+function multiform_first_form_submit($form, &$form_state) {
+  $values = $form_state['values'];
+
+  // Save values to the form storage, add the next step function callback
+  $form_state['rebuild'] = TRUE;  // This is very important to have!
+  $form_state['storage']['step'] = 'multiform_last_form';
+}
+
+/**
+ * Menu callback form. First of three.
+ */
+function multiform_first_form($form, $form_state) {
+  if (!empty($form_state['storage'])) {
+    $values = $form_state['storage'];
+  }
+  $form['terms']['terms_checkbox'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('I agree to the terms of use'),
+    '#required' => TRUE,
+  );
+  $form['#submit'][] = 'multiform_last_form_submit';
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Next'),
+  );
+  return $form;
+}
+
+function multiform_last_form_submit($form, &$form_state) {
+  $values = $form_state['values'];
+  $form_state['rebuild'] = TRUE;
+
+  $form_state['storage']['terms_checkbox'] = htmlspecialchars($values['terms_checkbox']);
+  $form_state['storage']['step'] = 'multiform_form_complete';
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit'),
+  );
+
+  $form['#submit'][] = 'multiform_last_form_submit';
+
+  return $form;
+}
+
+function multiform_form_complete($form, &$form_state) {
+  drupal_set_message($form_state['values']['title'], 'warning');
+
+  return $form;
+}

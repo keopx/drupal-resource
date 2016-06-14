@@ -1,0 +1,7 @@
+name = Multistep form alter
+description = Create multistep form using form_alter
+core = 7.x
+package = Keopx
+version = 7.x-1.0-dev
+; files[] = 
+; configure = 
